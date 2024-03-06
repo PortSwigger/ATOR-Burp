@@ -64,10 +64,6 @@ public class ImportATOR {
 		byte[] requestbyte = callbacks.getHelpers().stringToBytes(request);
 		byte[] responsebyte = callbacks.getHelpers().stringToBytes(response);
 		
-//		String host = (String) jsonObject.get("host");
-//		Long port = (Long) jsonObject.get("port");
-//		String protocol = (String) jsonObject.get("protocol");
-		
 		ErrorPanel.host = (String) jsonObject.get("host");
 		Long port = (Long) jsonObject.get("port");
 		ErrorPanel.port = port.intValue();
@@ -190,8 +186,9 @@ public class ImportATOR {
 		
 		String extractedName = (String) jsonObject.get("Name");
 		String extractionListName = (String) jsonObject.get("ExtractionName");
+		String replacementIn = (String) jsonObject.get("replacementIn");
 		
-		ReplaceEntry replaceEntry = new ReplaceEntry(extractedName, extractionListName);
+		ReplaceEntry replaceEntry = new ReplaceEntry(extractedName, extractionListName, replacementIn);
 		replaceEntry.startString = (String) jsonObject.get("startString");
 		replaceEntry.stopString = (String) jsonObject.get("stopString");
 		replaceEntry.selectedText = (String) jsonObject.get("selectedText");

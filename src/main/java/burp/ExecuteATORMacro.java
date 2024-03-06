@@ -72,8 +72,6 @@ public class ExecuteATORMacro {
 	}
 	
 	public void makeHttpCall(IHttpService httpService, byte[] request, ObtainEntry obtainEntry) {
-//		IHttpRequestResponse updatedHttpRequestResponse = makeCall(httpService, request);
-//		String response = callbacks.getHelpers().bytesToString(updatedHttpRequestResponse.getResponse());
 		try {
 			String response = makeCall(httpService, request);
 			for(ExtractionEntry extractionEntry: obtainEntry.extractionlistNames) {
@@ -92,6 +90,9 @@ public class ExecuteATORMacro {
 		IExtensionHelpers helpers = callbacks.getHelpers();
 		byte[] updatedRequest = Utils.checkContentLength(requestbytes, helpers);
 		String host = Utils.findheader(BurpExtender.callbacks.getHelpers().bytesToString(updatedRequest), "Host: ");
+		if (host.contains(":")) {
+			host = host.split(":")[0];
+		}
 		int port = iHttpService.getPort();
 		String protocol = iHttpService.getProtocol();
 		if (protocol.equals("https")){
@@ -100,10 +101,6 @@ public class ExecuteATORMacro {
 		try {
 			byte[] byteResponse = callbacks.makeHttpRequest(host, port, useHttps, updatedRequest);
 			response = BurpExtender.callbacks.getHelpers().bytesToString(byteResponse);
-			//int offset = BurpExtender.callbacks.getHelpers().analyzeResponse(byteResponse).getBodyOffset();
-//			// testing to fetch start of body, pending
-//			String headers = response.substring(0, offset);
-//	    	String bodyText = response.substring(offset);
 	    	return response;
 		}
 		catch (Exception e) {
@@ -116,21 +113,38 @@ public class ExecuteATORMacro {
 	public static String replaceOnRequest(IHttpRequestResponse iHttpRequestResponse) {
 		String requestmsg = BurpExtender.callbacks.getHelpers().bytesToString(iHttpRequestResponse.getRequest());
 		int offset = BurpExtender.callbacks.getHelpers().analyzeRequest(iHttpRequestResponse).getBodyOffset();
+		String urlText = new String(requestmsg.split("\n")[0]);
 		String headers = requestmsg.substring(0, offset);
     	String bodyText = requestmsg.substring(offset);
-
 		for(ReplaceEntry rep: ReplacePanel.replaceEntrylist) {
+			String extracted = "Ext ERR on SPOT";
 			String extractionName = rep.getextractionName();
-			String extracted = Extraction.extractingDataInSpotError(headers, rep.startString, rep.stopString, rep.headerName, "Ext ERR on SPOT", bodyText);
-			// TODO
+			String replacementIn = rep.getReplacementIn();
+			// if replacement in url
+			if (replacementIn.equals("URL")){
+				extracted = Extraction.extractingDataInURL(urlText, rep.startString, rep.stopString, "Ext ERR on SPOT");
+			}
+			else if (replacementIn.equals("BODY") &&  BurpExtender.bodyContentType.equals("application/json") ) {
+				extracted = Extraction.extractingInJsonBody(bodyText, rep.startString, rep.stopString, "EXTRACTION_ERROR");
+			}
+			else if (replacementIn.equals("BODY") &&  BurpExtender.bodyContentType.contains("multipart/form-data") ) {
+				extracted = Extraction.extractingInJsonBody(bodyText, rep.startString, rep.stopString, "EXTRACTION_ERROR");
+			}
+			else {
+				extracted = Extraction.extractingDataInSpotError(headers, rep.startString, rep.stopString, rep.headerName, "Ext ERR on SPOT", bodyText);
+			}
+
 			for(ExtractionEntry extractionEntry: ObtainPanel.extractionEntrylist) {
-				//BurpExtender.callbacks.printOutput("extractionName "+ extractionName);
 				if(extractionEntry.getName().equals(extractionName)) {
 					String value = extractionEntry.value;
 					if (value != null) {
 						value = Extraction.removeemptyCharacter(value);
 						if((!extracted.equals("Ext ERR on SPOT")) || (!extracted.equals("ExtERRonSPOT"))) {
-							requestmsg = requestmsg.replace(extracted, value);		
+							try {
+							requestmsg = requestmsg.replace(extracted, value);}
+							catch (Exception e) {
+								BurpExtender.callbacks.printOutput("Exception in value replacement " + e.getMessage());
+							}
 					}}
 					break;
 				}

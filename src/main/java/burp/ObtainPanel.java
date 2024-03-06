@@ -40,7 +40,7 @@ public class ObtainPanel {
 	public static JComboBox<String> urldecodeComboBox = new JComboBox<String>();
 	public static JTextField replacementNameStringField;
 	public static JButton repCreateButton;
-	
+
 	public static ArrayList<ObtainEntry> obtainEntrylist = new ArrayList<ObtainEntry>();
 	public static ArrayList<ExtractionEntry> extractionEntrylist = new ArrayList<ExtractionEntry>();
 	public static ArrayList<ReplacementEntry> replacementEntrylist = new ArrayList<ReplacementEntry>();
@@ -372,6 +372,7 @@ public class ObtainPanel {
         
 		extButtonsPane.add(new JLabel("Name:"));
         extButtonsPane.add(extractionNameStringField);
+        
         extButtonsPane.add(new JLabel("Start string:"));
         extButtonsPane.add(startStringField);
         extButtonsPane.add(new JLabel("Stop string:"));
@@ -489,8 +490,6 @@ public class ObtainPanel {
         		ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         extractionTableScroll.setPreferredSize(new Dimension(240, 150));
         this.callbacks.customizeUiComponent(extractionTableScroll);
-        
-        
         
         return extractionTableScroll;
 	}
